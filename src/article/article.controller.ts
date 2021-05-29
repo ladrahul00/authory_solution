@@ -1,12 +1,19 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ArticleService } from './article.service';
+import { IAnalyticsResponse, AnalyticsQueryParams } from './types';
 
-@Controller("/article")
+@Controller()
 export class ArticleController {
-    constructor(private readonly articleService: ArticleService) { }
+  constructor(private readonly articleService: ArticleService) {}
 
-    @Get()
-    public getHello(): string {
-        return this.articleService.getHello();
-    }
+  @Get('/analytics')
+  public async analytics(
+    @Query() queryParams: AnalyticsQueryParams,
+  ): Promise<IAnalyticsResponse[]> {
+    return this.articleService.analytics(
+      queryParams.from,
+      queryParams.orderBy,
+      queryParams.to,
+    );
+  }
 }

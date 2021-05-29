@@ -4,23 +4,23 @@ import { AppModule } from '../src/app.module';
 import { forwardRef, INestApplication } from '@nestjs/common';
 
 describe('AppController (e2e)', () => {
-    let app: INestApplication;
+  let app: INestApplication;
 
-    beforeAll(async () => {
-        // Main.initialize();
+  beforeAll(async () => {
+    // Main.initialize();
 
-        const moduleFixture = await Test.createTestingModule({
-            imports: [forwardRef(() => AppModule)],
-        }).compile();
+    const moduleFixture = await Test.createTestingModule({
+      imports: [forwardRef(() => AppModule)],
+    }).compile();
 
-        app = moduleFixture.createNestApplication();
-        await app.init();
-    });
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
 
-    it('/ (GET)', () => {
-        return request(app.getHttpServer())
-            .get('/ping')
-            .expect(200)
-            .expect('Hello World!');
-    });
+  it('/ (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/ping')
+      .expect(200)
+      .expect('Hello World!');
+  });
 });

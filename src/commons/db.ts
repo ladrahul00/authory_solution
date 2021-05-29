@@ -1,20 +1,58 @@
-import { AAsyncResource } from "./types";
+import { AAsyncResource } from './types';
+import { Pool, PoolConfig, QueryResult } from 'pg';
 
-export class DatabaseService extends AAsyncResource
-{
-    private readonly connectionString: string;
-    constructor(connectionString: string)
-    {
-        super();
-        this.connectionString = connectionString;
+export class DatabaseService extends AAsyncResource {
+  private readonly connectionString: string;
+  private readonly connectionPoolConfig: PoolConfig;
+
+  constructor(connectionString?: string) {
+    super();
+    this.connectionString =
+      connectionString ??
+      'postgres://postgres:mysecretpassword@localhost:5432/authory';
+    this.connectionPoolConfig = {
+      max: 20,
+      connectionString: this.connectionString,
+      idleTimeoutMillis: 30000,
+    };
+  }
+
+  public async executeQuery(queryString: string): Promise<QueryResult> {
+    const pool = new Pool(this.connectionPoolConfig);
+    const client = await pool.connect();
+    let queryResponse: QueryResult | undefined;
+    try {
+      queryResponse = await client.query(queryString);
+    } catch (error) {
+      throw error;
+    } finally {
+      try {
+        client.release();
+      } catch (error) {
+        throw error;
+      } finally {
+        await pool.end();
+      }
     }
+    return queryResponse;
+  }
 
-    public destroy(): Promise<void> {
-        throw new Error("Method not implemented.");
+  public async destroy(): Promise<void> {
+    // await this.connectionPool.end();
+    return Promise.resolve();
+  }
+
+  public async prepare(): Promise<void> {
+    const pool = new Pool(this.connectionPoolConfig);
+    const client = await pool.connect();
+    console.log('connection to database has been verified');
+    try {
+      client.release();
+    } catch (error) {
+      console.error('failed to connect to database');
+      throw error;
+    } finally {
+      await pool.end();
     }
-
-    public prepare(): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-
+  }
 }
