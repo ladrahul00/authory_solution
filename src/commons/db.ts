@@ -22,14 +22,17 @@ export class DatabaseService extends AAsyncResource {
         try {
             queryResponse = await client.query(queryString)
         } catch (error) {
+            console.error("failed to connect to database");
             throw error
         } finally {
             try {
-                client.release()
+                client.release();
+                console.debug("released database client");
             } catch (error) {
-                throw error
+                throw error;
             } finally {
-                await pool.end()
+                await pool.end();
+                console.debug("closing the connection pool");
             }
         }
         return queryResponse
@@ -50,6 +53,7 @@ export class DatabaseService extends AAsyncResource {
             throw error
         } finally {
             await pool.end()
+            console.debug("closing the connection pool");
         }
     }
 }
