@@ -1,12 +1,12 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ArticleService } from './article.service';
-import { IAnalyticsResponse, AnalyticsQueryParams } from './types';
+import { Controller, Get, Query } from "@nestjs/common";
+import { ArticleService } from "./article.service";
+import { IAnalyticsResponse, AnalyticsQueryParams } from "./types";
 
 @Controller()
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
-  @Get('/analytics')
+  @Get("/analytics")
   public async analytics(
     @Query() queryParams: AnalyticsQueryParams,
   ): Promise<IAnalyticsResponse[]> {

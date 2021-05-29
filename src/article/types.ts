@@ -1,20 +1,20 @@
-import { IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional } from "class-validator";
 
 export enum ShareSiteActions {
-  FACEBOOK = 'facebook',
-  TWITTER = 'twitter',
-  PINTEREST = 'pinterest',
-  FACEBOOK_REACTIONS = 'facebook_reactions', // not present in data
-  LINKEDIN_COMMENTS = 'linkedin_comments',
-  LINKEDIN_REACTIONS = 'linkedin_reactions',
+  FACEBOOK = "facebook",
+  TWITTER = "twitter",
+  PINTEREST = "pinterest",
+  FACEBOOK_REACTIONS = "facebook_reactions", // not present in data
+  LINKEDIN_COMMENTS = "linkedin_comments",
+  LINKEDIN_REACTIONS = "linkedin_reactions",
 }
 
 export enum ShareSite {
-  FACEBOOK = 'facebook',
-  TWITTER = 'twitter',
-  PINTEREST = 'pinterest',
-  LINKEDIN = 'linkedin',
-  ALL = 'all',
+  FACEBOOK = "facebook",
+  TWITTER = "twitter",
+  PINTEREST = "pinterest",
+  LINKEDIN = "linkedin",
+  ALL = "all",
 }
 
 export interface IAnalyticsOptions {

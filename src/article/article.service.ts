@@ -1,28 +1,32 @@
-import { Main } from '../main';
-import { Resource } from '../commons/types';
-import { IAnalyticsResponse, ShareSite } from './types';
-import { InternalServerErrorException } from '@nestjs/common';
+import { Resource } from "../commons/types";
+import { IAnalyticsResponse, ShareSite } from "./types";
+import { InternalServerErrorException } from "@nestjs/common";
+import { DatabaseService } from "src/commons/db";
 
 export class ArticleService extends Resource {
-  private static readonly SHARE_COUNT_HISTORY_TABLE_NAME =
-    '"ShareCountHistory"';
-  private static readonly ARTICLE_ID_ATTRIBUTE_NAME = '"articleId"';
-  private static readonly SITE_ATTRIBUTE_NAME = '"site"';
-  private static readonly TIMESTAMP_ATTRIBUTE_NAME = '"timestamp"';
-  private static readonly NOW_TIMESTAMP_FUNCTION = 'extract(epoch from now())';
+  public static readonly FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE =
+    "from date cannot be greater than to date";
+
+  private readonly databaseService: DatabaseService;
+
+  constructor(databaseService_: DatabaseService) {
+    super();
+    this.databaseService = databaseService_;
+  }
 
   public async analytics(
     fromDateTime?: string,
     orderBy?: ShareSite,
     toDateTime?: string,
   ): Promise<IAnalyticsResponse[]> {
-    const databaseService = Main.databaseService();
     const queryString = ArticleService.generateQueryString(
       fromDateTime,
       toDateTime,
       orderBy,
     );
-    const toValueQueryResult = await databaseService.executeQuery(queryString);
+    const toValueQueryResult = await this.databaseService.executeQuery(
+      queryString,
+    );
     const analyticsResp = toValueQueryResult.rows as IAnalyticsResponse[];
     return analyticsResp;
   }
@@ -53,7 +57,7 @@ export class ArticleService extends Resource {
     const toDate = ArticleService.getToDate(toDateString);
     if (fromDate && toDate && fromDate > toDate) {
       throw new InternalServerErrorException(
-        'from date cannot be greater than to date',
+        ArticleService.FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE,
       );
     }
     if (fromDate) {

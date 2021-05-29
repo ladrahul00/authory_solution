@@ -1,5 +1,5 @@
-import { AAsyncResource } from './types';
-import { Pool, PoolConfig, QueryResult } from 'pg';
+import { AAsyncResource } from "./types";
+import { Pool, PoolConfig, QueryResult } from "pg";
 
 export class DatabaseService extends AAsyncResource {
   private readonly connectionString: string;
@@ -7,9 +7,7 @@ export class DatabaseService extends AAsyncResource {
 
   constructor(connectionString?: string) {
     super();
-    this.connectionString =
-      connectionString ??
-      'postgres://postgres:mysecretpassword@localhost:5432/authory';
+    this.connectionString = process.env.DATABASE_CONNECTION_STRING;
     this.connectionPoolConfig = {
       max: 20,
       connectionString: this.connectionString,
@@ -45,11 +43,11 @@ export class DatabaseService extends AAsyncResource {
   public async prepare(): Promise<void> {
     const pool = new Pool(this.connectionPoolConfig);
     const client = await pool.connect();
-    console.log('connection to database has been verified');
+    console.log("connection to database has been verified");
     try {
       client.release();
     } catch (error) {
-      console.error('failed to connect to database');
+      console.error("failed to connect to database");
       throw error;
     } finally {
       await pool.end();
