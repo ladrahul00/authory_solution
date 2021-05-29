@@ -5,7 +5,7 @@ export class DatabaseService extends AAsyncResource {
   private readonly connectionString: string;
   private readonly connectionPoolConfig: PoolConfig;
 
-  constructor(connectionString?: string) {
+  constructor() {
     super();
     this.connectionString = process.env.DATABASE_CONNECTION_STRING;
     this.connectionPoolConfig = {
