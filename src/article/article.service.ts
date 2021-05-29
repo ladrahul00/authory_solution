@@ -2,6 +2,7 @@ import { Resource } from '../commons/types';
 import { IAnalyticsResponse, ShareSite } from './types';
 import { InternalServerErrorException } from '@nestjs/common';
 import { DatabaseService } from 'src/commons/db';
+import { QueryResult } from 'pg';
 
 export class ArticleService extends Resource {
     public static readonly FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE =
@@ -24,9 +25,14 @@ export class ArticleService extends Resource {
             toDateTime,
             orderBy
         );
-        const toValueQueryResult = await this.databaseService.executeQuery(
-            queryString
-        );
+        let toValueQueryResult: QueryResult;
+        try {
+            toValueQueryResult = await this.databaseService.executeQuery(
+                queryString
+            );
+        } catch (error) {
+            throw new InternalServerErrorException(error, "failed to query the database");
+        }
         const analyticsResp = toValueQueryResult.rows as IAnalyticsResponse[];
         return analyticsResp;
     }

@@ -31,7 +31,7 @@ $ npm run start:prod
 ```
 
 ## Test
-
+Please start postgresql to successfully execute the tests and update `.env` file with connection string.
 ```bash
 # unit tests
 $ npm run test
