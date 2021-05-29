@@ -1,69 +1,74 @@
-import { Resource } from "../commons/types";
-import { IAnalyticsResponse, ShareSite } from "./types";
-import { InternalServerErrorException } from "@nestjs/common";
-import { DatabaseService } from "src/commons/db";
+import { Resource } from '../commons/types'
+import { IAnalyticsResponse, ShareSite } from './types'
+import { InternalServerErrorException } from '@nestjs/common'
+import { DatabaseService } from 'src/commons/db'
 
 export class ArticleService extends Resource {
-  public static readonly FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE =
-    "from date cannot be greater than to date";
+    public static readonly FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE =
+        'from date cannot be greater than to date'
 
-  private readonly databaseService: DatabaseService;
+    private readonly databaseService: DatabaseService
 
-  constructor(databaseService_: DatabaseService) {
-    super();
-    this.databaseService = databaseService_;
-  }
-
-  public async analytics(
-    fromDateTime?: string,
-    orderBy?: ShareSite,
-    toDateTime?: string,
-  ): Promise<IAnalyticsResponse[]> {
-    const queryString = ArticleService.generateQueryString(
-      fromDateTime,
-      toDateTime,
-      orderBy,
-    );
-    const toValueQueryResult = await this.databaseService.executeQuery(
-      queryString,
-    );
-    const analyticsResp = toValueQueryResult.rows as IAnalyticsResponse[];
-    return analyticsResp;
-  }
-
-  private static getFromDate(from?: string): Date | undefined {
-    if (!from) return;
-    const fromDate = new Date(Date.parse(from));
-    const minDateThreshold = new Date(0);
-    if (minDateThreshold < fromDate) return fromDate;
-    return;
-  }
-  private static getToDate(to?: string): Date | undefined {
-    if (!to) return;
-    const toDate = new Date(Date.parse(to));
-    const maxDateThreshold = new Date();
-    if (maxDateThreshold > toDate) return toDate;
-    return;
-  }
-
-  private static generateQueryString(
-    fromDateString?: string,
-    toDateString?: string,
-    orderBy: ShareSite = ShareSite.ALL,
-  ) {
-    let aboveQuery: string;
-    let belowQuery: string;
-    const fromDate = ArticleService.getFromDate(fromDateString);
-    const toDate = ArticleService.getToDate(toDateString);
-    if (fromDate && toDate && fromDate > toDate) {
-      throw new InternalServerErrorException(
-        ArticleService.FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE,
-      );
+    constructor(databaseService_: DatabaseService) {
+        super()
+        this.databaseService = databaseService_
     }
-    if (fromDate) {
-      const fromEpoch =
-        (fromDate.getTime() - fromDate.getMilliseconds()) / 1000;
-      belowQuery = `WINDOW_BELOW AS (
+
+    public async analytics(
+        fromDateTime?: string,
+        orderBy?: ShareSite,
+        toDateTime?: string
+    ): Promise<IAnalyticsResponse[]> {
+        const queryString = ArticleService.generateQueryString(
+            fromDateTime,
+            toDateTime,
+            orderBy
+        )
+        const toValueQueryResult = await this.databaseService.executeQuery(
+            queryString
+        )
+        const analyticsResp = toValueQueryResult.rows as IAnalyticsResponse[]
+        return analyticsResp
+    }
+
+    private static getFromDate(from?: string): Date | undefined {
+        if (!from) return
+        const fromDate = new Date(Date.parse(from))
+        const minDateThreshold = new Date(0)
+        if (minDateThreshold < fromDate) return fromDate
+        // If "from" goes below the epoch start date time, the expected behaviour is to return the empty records,
+        // hence the "from" value is set to undefined
+        return
+    }
+    private static getToDate(to?: string): Date | undefined {
+        if (!to) return
+        const toDate = new Date(Date.parse(to))
+        const maxDateThreshold = new Date()
+        if (maxDateThreshold > toDate) return toDate
+        // If "to" exceeds the current date time, the expected behaviour is to return the most recent records,
+        // hence the "to" value is set to undefined
+        return
+    }
+
+    private static generateQueryString(
+        fromDateString?: string,
+        toDateString?: string,
+        orderBy: ShareSite = ShareSite.ALL
+    ) {
+        let aboveQuery: string
+        let belowQuery: string
+        const fromDate = ArticleService.getFromDate(fromDateString)
+        const toDate = ArticleService.getToDate(toDateString)
+        if (fromDate && toDate && fromDate > toDate) {
+            throw new InternalServerErrorException(
+                ArticleService.FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE
+            )
+        }
+        if (fromDate) {
+            const fromEpoch =
+                (fromDate.getTime() - fromDate.getMilliseconds()) / 1000
+            // The expected value for id is latest share count entry id before “from”
+            belowQuery = `WINDOW_BELOW AS (
                 SELECT DISTINCT ON ("articleId", "site")
                 LAST_VALUE("id") OVER wnd AS below
                 FROM "ShareCountHistory"
@@ -73,9 +78,10 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`;
-    } else {
-      belowQuery = `WINDOW_BELOW AS (
+            ),`
+        } else {
+            // The response here will be empty
+            belowQuery = `WINDOW_BELOW AS (
                 SELECT DISTINCT ON ("articleId", "site")
                 LAST_VALUE("id") OVER wnd AS below
                 FROM "ShareCountHistory"
@@ -85,11 +91,12 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`;
-    }
-    if (toDate) {
-      const toEpoch = (toDate.getTime() - toDate.getMilliseconds()) / 1000;
-      aboveQuery = `WINDOW_ABOVE AS (
+            ),`
+        }
+        if (toDate) {
+            const toEpoch = (toDate.getTime() - toDate.getMilliseconds()) / 1000
+            // The expected value for id is earliest share count entry after “to”
+            aboveQuery = `WINDOW_ABOVE AS (
                 SELECT DISTINCT ON ("articleId", "site")
                 FIRST_VALUE("id") OVER wnd AS above
                 FROM "ShareCountHistory"
@@ -99,9 +106,10 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`;
-    } else {
-      aboveQuery = `WINDOW_ABOVE AS (
+            ),`
+        } else {
+            // The expected value for id is the latest share count entry
+            aboveQuery = `WINDOW_ABOVE AS (
                 SELECT DISTINCT ON ("articleId", "site")
                 LAST_VALUE("id") OVER wnd AS above
                 FROM "ShareCountHistory"
@@ -111,9 +119,9 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`;
-    }
-    return `
+            ),`
+        }
+        return `
             WITH
                 ${belowQuery}
                 ${aboveQuery}
@@ -194,6 +202,6 @@ export class ArticleService extends Resource {
                 LEFT JOIN PINTEREST_FINAL_VALUES AS pint ON  all_articles."articleId" = pint."articleId"
                 LEFT JOIN LINKEDIN_FINAL_VALUES AS lkdin ON all_articles."articleId" = lkdin."articleId"
                 LEFT JOIN FACEBOOK_FINAL_VALUES AS fb ON all_articles."articleId" = fb."articleId"
-                ORDER BY "${orderBy}" DESC`;
-  }
+                ORDER BY "${orderBy}" DESC`
+    }
 }
