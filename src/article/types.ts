@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsOptional } from 'class-validator'
+import { IsDateString, IsEnum, IsOptional } from 'class-validator';
 
 export enum ShareSiteActions {
     FACEBOOK = 'facebook',
@@ -18,42 +18,42 @@ export enum ShareSite {
 }
 
 export interface IAnalyticsOptions {
-    from?: Date
-    to?: Date
-    orderBy: ShareSite
+    from?: Date;
+    to?: Date;
+    orderBy: ShareSite;
 }
 
 export interface IAnalyticsResponse {
-    id: number
-    twitter: number
-    facebook: number
-    linkedin: number
-    pinterest: number
-    all: number
+    id: number;
+    twitter: number;
+    facebook: number;
+    linkedin: number;
+    pinterest: number;
+    all: number;
 }
 
 export interface IShareCountHistory {
-    id: number
-    articleId?: number
-    count: number
-    site: ShareSiteActions
-    timestamp: string
+    id: number;
+    articleId?: number;
+    count: number;
+    site: ShareSiteActions;
+    timestamp: string;
 }
 
 export interface IShareCountHistoryList {
-    rows: IShareCountHistory[]
+    rows: IShareCountHistory[];
 }
 
 export class AnalyticsQueryParams {
     @IsEnum(ShareSite)
     @IsOptional()
-    orderBy?: ShareSite
+    orderBy?: ShareSite;
 
     @IsDateString()
     @IsOptional()
-    from?: string
+    from?: string;
 
     @IsDateString()
     @IsOptional()
-    to?: string
+    to?: string;
 }

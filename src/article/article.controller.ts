@@ -1,6 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common'
-import { ArticleService } from './article.service'
-import { IAnalyticsResponse, AnalyticsQueryParams } from './types'
+import { Controller, Get, Query } from '@nestjs/common';
+import { ArticleService } from './article.service';
+import { IAnalyticsResponse, AnalyticsQueryParams } from './types';
 
 @Controller()
 export class ArticleController {
@@ -14,6 +14,6 @@ export class ArticleController {
             queryParams.from,
             queryParams.orderBy,
             queryParams.to
-        )
+        );
     }
 }

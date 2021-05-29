@@ -1,17 +1,17 @@
-import { Resource } from '../commons/types'
-import { IAnalyticsResponse, ShareSite } from './types'
-import { InternalServerErrorException } from '@nestjs/common'
-import { DatabaseService } from 'src/commons/db'
+import { Resource } from '../commons/types';
+import { IAnalyticsResponse, ShareSite } from './types';
+import { InternalServerErrorException } from '@nestjs/common';
+import { DatabaseService } from 'src/commons/db';
 
 export class ArticleService extends Resource {
     public static readonly FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE =
-        'from date cannot be greater than to date'
+        'from date cannot be greater than to date';
 
-    private readonly databaseService: DatabaseService
+    private readonly databaseService: DatabaseService;
 
     constructor(databaseService_: DatabaseService) {
-        super()
-        this.databaseService = databaseService_
+        super();
+        this.databaseService = databaseService_;
     }
 
     public async analytics(
@@ -23,31 +23,31 @@ export class ArticleService extends Resource {
             fromDateTime,
             toDateTime,
             orderBy
-        )
+        );
         const toValueQueryResult = await this.databaseService.executeQuery(
             queryString
-        )
-        const analyticsResp = toValueQueryResult.rows as IAnalyticsResponse[]
-        return analyticsResp
+        );
+        const analyticsResp = toValueQueryResult.rows as IAnalyticsResponse[];
+        return analyticsResp;
     }
 
     private static getFromDate(from?: string): Date | undefined {
-        if (!from) return
-        const fromDate = new Date(Date.parse(from))
-        const minDateThreshold = new Date(0)
-        if (minDateThreshold < fromDate) return fromDate
+        if (!from) return;
+        const fromDate = new Date(Date.parse(from));
+        const minDateThreshold = new Date(0);
+        if (minDateThreshold < fromDate) return fromDate;
         // If "from" goes below the epoch start date time, the expected behaviour is to return the empty records,
         // hence the "from" value is set to undefined
-        return
+        return;
     }
     private static getToDate(to?: string): Date | undefined {
-        if (!to) return
-        const toDate = new Date(Date.parse(to))
-        const maxDateThreshold = new Date()
-        if (maxDateThreshold > toDate) return toDate
+        if (!to) return;
+        const toDate = new Date(Date.parse(to));
+        const maxDateThreshold = new Date();
+        if (maxDateThreshold > toDate) return toDate;
         // If "to" exceeds the current date time, the expected behaviour is to return the most recent records,
         // hence the "to" value is set to undefined
-        return
+        return;
     }
 
     private static generateQueryString(
@@ -55,18 +55,18 @@ export class ArticleService extends Resource {
         toDateString?: string,
         orderBy: ShareSite = ShareSite.ALL
     ) {
-        let aboveQuery: string
-        let belowQuery: string
-        const fromDate = ArticleService.getFromDate(fromDateString)
-        const toDate = ArticleService.getToDate(toDateString)
+        let aboveQuery: string;
+        let belowQuery: string;
+        const fromDate = ArticleService.getFromDate(fromDateString);
+        const toDate = ArticleService.getToDate(toDateString);
         if (fromDate && toDate && fromDate > toDate) {
             throw new InternalServerErrorException(
                 ArticleService.FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE
-            )
+            );
         }
         if (fromDate) {
             const fromEpoch =
-                (fromDate.getTime() - fromDate.getMilliseconds()) / 1000
+                (fromDate.getTime() - fromDate.getMilliseconds()) / 1000;
             // The expected value for id is latest share count entry id before “from”
             belowQuery = `WINDOW_BELOW AS (
                 SELECT DISTINCT ON ("articleId", "site")
@@ -78,7 +78,7 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`
+            ),`;
         } else {
             // The response here will be empty
             belowQuery = `WINDOW_BELOW AS (
@@ -91,10 +91,11 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`
+            ),`;
         }
         if (toDate) {
-            const toEpoch = (toDate.getTime() - toDate.getMilliseconds()) / 1000
+            const toEpoch =
+                (toDate.getTime() - toDate.getMilliseconds()) / 1000;
             // The expected value for id is earliest share count entry after “to”
             aboveQuery = `WINDOW_ABOVE AS (
                 SELECT DISTINCT ON ("articleId", "site")
@@ -106,7 +107,7 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`
+            ),`;
         } else {
             // The expected value for id is the latest share count entry
             aboveQuery = `WINDOW_ABOVE AS (
@@ -119,7 +120,7 @@ export class ArticleService extends Resource {
                     PARTITION BY "articleId", "site" ORDER BY "timestamp"
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                 )
-            ),`
+            ),`;
         }
         return `
             WITH
@@ -202,6 +203,6 @@ export class ArticleService extends Resource {
                 LEFT JOIN PINTEREST_FINAL_VALUES AS pint ON  all_articles."articleId" = pint."articleId"
                 LEFT JOIN LINKEDIN_FINAL_VALUES AS lkdin ON all_articles."articleId" = lkdin."articleId"
                 LEFT JOIN FACEBOOK_FINAL_VALUES AS fb ON all_articles."articleId" = fb."articleId"
-                ORDER BY "${orderBy}" DESC`
+                ORDER BY "${orderBy}" DESC`;
     }
 }

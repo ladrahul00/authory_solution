@@ -1,6 +1,6 @@
-import { Main } from './appMain'
+import { Main } from './appMain';
 
 async function bootstrap() {
-    await Main.run()
+    await Main.run();
 }
-bootstrap()
+bootstrap();

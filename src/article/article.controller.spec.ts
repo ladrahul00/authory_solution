@@ -1,21 +1,21 @@
-import { InternalServerErrorException } from '@nestjs/common'
-import { Test, TestingModule } from '@nestjs/testing'
-import { DatabaseService } from '../commons/db'
-import { ArticleController } from './article.controller'
-import { ArticleService } from './article.service'
-import { AnalyticsQueryParams } from './types'
+import { InternalServerErrorException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { DatabaseService } from '../commons/db';
+import { ArticleController } from './article.controller';
+import { ArticleService } from './article.service';
+import { AnalyticsQueryParams } from './types';
 
 describe('AppController', () => {
-    let app: TestingModule
-    const OLD_ENV = process.env
+    let app: TestingModule;
+    const OLD_ENV = process.env;
 
     beforeAll(async () => {
-        process.env = { ...OLD_ENV } // Make a copy
+        process.env = { ...OLD_ENV }; // Make a copy
         process.env.DATABASE_CONNECTION_STRING =
-            'postgres://postgres:mysecretpassword@localhost:5432/authory'
+            'postgres://postgres:mysecretpassword@localhost:5432/authory';
 
-        const databaseService = new DatabaseService()
-        const articleService = new ArticleService(databaseService)
+        const databaseService = new DatabaseService();
+        const articleService = new ArticleService(databaseService);
 
         app = await Test.createTestingModule({
             controllers: [ArticleController],
@@ -25,44 +25,44 @@ describe('AppController', () => {
                     useFactory: () => articleService,
                 },
             ],
-        }).compile()
-    })
+        }).compile();
+    });
 
     afterAll(() => {
-        process.env = OLD_ENV // Restore old environment
-    })
+        process.env = OLD_ENV; // Restore old environment
+    });
 
     it("fails to retrieve analytics when 'from' date is after 'to' date", () => {
-        const appController = app.get<ArticleController>(ArticleController)
-        const queryParams = new AnalyticsQueryParams()
-        const fromDate = new Date()
-        queryParams.from = fromDate.toISOString()
-        const dateAtEpoch = new Date(0)
-        queryParams.to = dateAtEpoch.toISOString()
+        const appController = app.get<ArticleController>(ArticleController);
+        const queryParams = new AnalyticsQueryParams();
+        const fromDate = new Date();
+        queryParams.from = fromDate.toISOString();
+        const dateAtEpoch = new Date(0);
+        queryParams.to = dateAtEpoch.toISOString();
         expect(appController.analytics(queryParams)).rejects.toThrowError(
             new InternalServerErrorException(
                 ArticleService.FROM_DATE_GREATER_THAN_TO_DATE_ERROR_MESSAGE
             )
-        )
-    })
+        );
+    });
 
     it("retrieves the analytics successfully without 'to' date", async () => {
-        const appController = app.get<ArticleController>(ArticleController)
-        const queryParams = new AnalyticsQueryParams()
-        const fromDate = new Date(0)
-        queryParams.from = fromDate.toISOString()
-        const analyticsDataRows = await appController.analytics(queryParams)
-        expect(analyticsDataRows).toHaveLength(20)
-    })
+        const appController = app.get<ArticleController>(ArticleController);
+        const queryParams = new AnalyticsQueryParams();
+        const fromDate = new Date(0);
+        queryParams.from = fromDate.toISOString();
+        const analyticsDataRows = await appController.analytics(queryParams);
+        expect(analyticsDataRows).toHaveLength(20);
+    });
 
     it("retrieves the analytics successfully without 'from' date", async () => {
-        const appController = app.get<ArticleController>(ArticleController)
-        const queryParams = new AnalyticsQueryParams()
-        const toDate = new Date()
-        queryParams.to = toDate.toISOString()
-        const analyticsDataRows = await appController.analytics(queryParams)
-        expect(analyticsDataRows).toHaveLength(20)
-    })
+        const appController = app.get<ArticleController>(ArticleController);
+        const queryParams = new AnalyticsQueryParams();
+        const toDate = new Date();
+        queryParams.to = toDate.toISOString();
+        const analyticsDataRows = await appController.analytics(queryParams);
+        expect(analyticsDataRows).toHaveLength(20);
+    });
 
     it("retrieves the analytics successfully without 'to' or 'from' date", async () => {
         const expectedResponse: any = [
@@ -226,22 +226,22 @@ describe('AppController', () => {
                 facebook: '0',
                 all: '3',
             },
-        ]
-        const appController = app.get<ArticleController>(ArticleController)
-        const queryParams = new AnalyticsQueryParams()
-        const analyticsDataRows = await appController.analytics(queryParams)
-        expect(analyticsDataRows).toHaveLength(20)
-        expect(analyticsDataRows).toStrictEqual(expectedResponse)
-    })
+        ];
+        const appController = app.get<ArticleController>(ArticleController);
+        const queryParams = new AnalyticsQueryParams();
+        const analyticsDataRows = await appController.analytics(queryParams);
+        expect(analyticsDataRows).toHaveLength(20);
+        expect(analyticsDataRows).toStrictEqual(expectedResponse);
+    });
 
     it("retrieves the analytics successfully with 'to' and 'from' date", async () => {
-        const appController = app.get<ArticleController>(ArticleController)
-        const queryParams = new AnalyticsQueryParams()
-        const fromDate = new Date(Date.parse('2011-10-05T14:48:00.000Z'))
-        queryParams.from = fromDate.toISOString()
-        const dateAtEpoch = new Date(Date.parse('2021-01-05T14:48:00.000Z'))
-        queryParams.to = dateAtEpoch.toISOString()
-        const analyticsDataRows = await appController.analytics(queryParams)
-        expect(analyticsDataRows).toHaveLength(20)
-    })
-})
+        const appController = app.get<ArticleController>(ArticleController);
+        const queryParams = new AnalyticsQueryParams();
+        const fromDate = new Date(Date.parse('2011-10-05T14:48:00.000Z'));
+        queryParams.from = fromDate.toISOString();
+        const dateAtEpoch = new Date(Date.parse('2021-01-05T14:48:00.000Z'));
+        queryParams.to = dateAtEpoch.toISOString();
+        const analyticsDataRows = await appController.analytics(queryParams);
+        expect(analyticsDataRows).toHaveLength(20);
+    });
+});
